@@ -1,7 +1,14 @@
+# alarms.py
+alarms = []
 
+def create_alarm(area, name, threshold):
+    alarm = {
+        "area": area,
+        "name": name,
+        "threshold": float(threshold)
+    }
+    alarms.append(alarm)
+    print(f"Alarm skapat: {alarm}")
 
-def create_alarm():
-    print("Creating a new alarm...")
-
-def show_alarms():
-    print("Show active alarm...")
+def get_alarms():
+    return alarms
