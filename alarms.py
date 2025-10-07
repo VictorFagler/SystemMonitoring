@@ -1,62 +1,52 @@
-alarms = []
+class AlarmManager:
+    def __init__(self):
+        self.alarms = []
 
-def create_alarm(area, name, threshold):
-    alarm = {
-        "area": area,
-        "name": name,
-        "threshold": float(threshold)
-    }
-    alarms.append(alarm)
-    print(f"Alarm skapat: {alarm}")
+    def create_alarm(self, area, threshold):
+        alarm = {
+            "area": area,
+            "threshold": float(threshold)
+        }
+        self.alarms.append(alarm)
+        return alarm
 
-def get_alarms():
-    return alarms
+    def get_alarms(self):
+        return self.alarms
+    
+alarm_manager = AlarmManager() # Create shared instance
 
-def build_alarm_menu():
+def build_alarm_menu(alarm_manager):
+    print("\n=== Configure Alarms ===")
     while True:
-        print("\n--- Configure Alarms ---")
-        print("1. CPU Usage")
-        print("2. Memory Usage")
-        print("3. Disk Usage")
-        print("0. Back to Main Menu")
+        print("1. CPU")
+        print("2. RAM")
+        print("3. Memory")
+        choice = input("Choose 1-3: ").strip()
 
-        choice = input("Choose an option: ")
         if choice == "1":
-            configure_alarm("CPU")
+            area = "CPU"
+            break
         elif choice == "2":
-            configure_alarm("Memory")
+            area = "RAM"
+            break
         elif choice == "3":
-            configure_alarm("Disk")
-        elif choice == "0":
+            area = "Memory"
             break
         else:
-            print("Invalid choice, try again.")
-def configure_alarm(area):
-    print(f"\nConfiguring alarm for {area}:")
-    name = input("Enter alarm name: ").strip()
-    threshold = input("Enter threshold (%): ").strip()
+            print("\nInvalid choice, try again.\n")
 
-    if not name or not threshold:
-        print("Error: Both name and threshold must be filled.")
-        return
+    while True:
+        threshold_input = input(f"Enter threshold for {area} (%): ").strip()
+        try:
+            threshold = float(threshold_input)
+        except ValueError:
+            print("Error: Threshold must be a number")
+            continue
 
-    try:
-        thr_value = float(threshold)
-    except ValueError:
-        print("Error: Threshold must be a number (e.g., 75 or 75.0).")
-        return
+        if threshold < 1 or threshold > 100:
+            print("Error: Threshold must be between 1 and 100")
+            continue
+        break
 
-    create_alarm(area, name, thr_value)
-    print(f"Alarm created: [{area}] {name}, threshold={thr_value}%")
-
-
-def show_alarms():
-    alarms_list = get_alarms()
-
-    print("\n--- Active Alarms ---")
-    if not alarms_list:
-        print("No alarms created yet.")
-        return
-
-    for i, alarm in enumerate(alarms_list, start=1):
-        print(f"{i}. [{alarm['area']}] {alarm['name']} — threshold: {alarm['threshold']}")
+    alarm = alarm_manager.create_alarm(area, threshold)
+    print(f"\n✅ Alarm created: [{alarm['area']}] ({alarm['threshold']}%)")

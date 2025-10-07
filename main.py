@@ -15,18 +15,29 @@ def build_main_menu():
         choice = input("Choose an option: ")
         if choice == "1":
             start_monitoring()
+
         elif choice == "2":
             list_active_monitoring()
+
         elif choice == "3":
-            build_alarm_menu()
+            build_alarm_menu(alarm_manager)
+
         elif choice == "4":
-            show_alarms()
+            alarms = alarm_manager.get_alarms()
+            if alarms:
+                print("\n--- Active Alarms ---")
+                for i, alarm in enumerate(alarms, start=1):
+                 print(f"{i}. [{alarm['area']}] ({alarm['threshold']}%)")
+            else:
+                print("\nNo alarms created yet.")
+
         elif choice == "5":
             start_monitoring_mode()
             
         elif choice == "0":
             print("Exiting...")
             break
+        
         else:
             print("Invalid choice, try again.")
 
