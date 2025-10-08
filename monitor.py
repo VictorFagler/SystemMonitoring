@@ -33,12 +33,12 @@ def start_monitoring():
 
     # Start monitoring if not already running
     monitoring = True
-    dashboard_thread = threading.Thread(target=_monitoring_loop, daemon=True)
+    dashboard_thread = threading.Thread(target=monitoring_loop, daemon=True)
     dashboard_thread.start()
     print()
     print("\n> Monitoring activated\n")
 
-def _monitoring_loop():
+def monitoring_loop():
     global current_stats, monitoring
     psutil.cpu_percent(interval=None)    # Prime CPU measurement
 
