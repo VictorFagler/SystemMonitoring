@@ -117,10 +117,10 @@ def start_monitoring_mode():
                 if area == "CPU" and stats["cpu"] >= threshold:
                     print(f"⚠️  CPU alarm triggered! Usage: {stats['cpu']}% (threshold {threshold}%)  ⚠️")
 
-                elif area == "RAM" and stats["memory_percent"] >= threshold:
-                    print(f"⚠️  RAM alarm triggered! Usage: {stats['memory_percent']}% (threshold {threshold}%)  ⚠️")
+                elif area == "Memory" and stats["memory_percent"] >= threshold:
+                    print(f"⚠️  Memory alarm triggered! Usage: {stats['memory_percent']}% (threshold {threshold}%)  ⚠️")
 
-                elif area == "Memory" and stats["disk_percent"] >= threshold:
+                elif area == "Disk" and stats["disk_percent"] >= threshold:
                     print(f"⚠️  Disk alarm triggered! Usage: {stats['disk_percent']}% (threshold {threshold}%)  ⚠️")
 
             print("\n(Press Enter to return)\n")

@@ -1,7 +1,7 @@
 from utils import *
 import json
 
-ALARM_FILE = "alarms_list.json"  # File to store alarms
+ALARM_FILE = os.path.join("data", "alarms_list.json")  # File to store alarms
 
 class AlarmManager:
     def __init__(self, file_path=ALARM_FILE):
@@ -23,6 +23,47 @@ class AlarmManager:
             return removed_alarm
         else:
             return None
+        
+    def show_or_delete_alarms(self):
+        while True:
+            alarms = self.get_alarms()  # refresh each loop
+
+            clear_screen()
+            print("\n=== Active Alarms ===\n")
+
+            # First show last removed message if exists
+            if hasattr(self, "_last_removed") and self._last_removed:
+                print(f"❌ Deleted alarm: [{self._last_removed['area']}] ({self._last_removed['threshold']}%)\n")
+                self._last_removed = None  # reset after showing once
+
+            if not alarms:
+                print("No alarms created yet.")
+                input("\nPress Enter to return to menu...")
+                clear_screen()
+                return
+
+            # Show current alarms
+            for i, alarm in enumerate(alarms, start=1):
+                print(f"{i}. [{alarm['area']}] ({alarm['threshold']}%)")
+
+            print("Press Enter to return or type a number to delete an alarm.\n")
+            choice = input("Your choice: ").strip()
+
+            if choice == "":
+                clear_screen()
+                return  # exit to main menu
+
+            try:
+                index = int(choice) - 1
+                removed = self.delete_alarm(index)
+                if removed:
+                    self._last_removed = removed  # store message to show next loop
+                else:
+                    print("\n❌ Invalid number.")
+                    input("\nPress Enter to continue...")
+            except ValueError:
+                print("\n❌ Please enter a valid number.")
+                input("\nPress Enter to continue...")
 
     def get_alarms(self):
         return self.alarms
@@ -47,18 +88,18 @@ def build_alarm_menu(alarm_manager):
     while True:
         print("\n=== Configure Alarms ===")
         print("1. CPU")
-        print("2. RAM")
-        print("3. Memory")
+        print("2. Memory")
+        print("3. Disk")
         choice = input("Choose alarm option 1-3: ").strip()
 
         if choice == "1":
             area = "CPU"
             break
         elif choice == "2":
-            area = "RAM"
+            area = "Memory"
             break
         elif choice == "3":
-            area = "Memory"
+            area = "Disk"
             break
         else:
             print("\nInvalid choice, try again.\n")
@@ -82,27 +123,3 @@ def build_alarm_menu(alarm_manager):
     print()
     print(f"\n✅ Alarm created: [{alarm['area']}] ({alarm['threshold']}%)")
 
-def delete_alarm_menu(alarm_manager):
-    alarms = alarm_manager.get_alarms()
-    if not alarms:
-        print("\nNo alarms to delete.")
-        input("\nPress Enter to return...")
-        return
-
-    print("\n=== Delete Alarm ===")
-    for i, alarm in enumerate(alarms, start=1):
-        print(f"{i}. [{alarm['area']}] ({alarm['threshold']}%)")
-
-    choice = input("\nEnter number to delete (or press Enter to cancel): ").strip()
-    if not choice:
-        return  # Cancel
-
-    try:
-        index = int(choice) - 1
-        removed = alarm_manager.delete_alarm(index)
-        if removed:
-            print(f"\n✅ Deleted alarm: [{removed['area']}] ({removed['threshold']}%)")
-        else:
-            print("\n❌ Invalid choice.")
-    except ValueError:
-        print("\n❌ Please enter a number.")
