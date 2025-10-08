@@ -1,12 +1,11 @@
 import psutil
 import time
-import os
 import threading
+from utils import *
 from alarms import *
 
 monitoring = False
 dashboard_thread = None
-
 current_stats = {
     "cpu": 0,
     "memory_used": 0,
@@ -17,19 +16,18 @@ current_stats = {
     "disk_percent": 0
 }
 
-def to_gb(val): # Formatera till GB
-    return round(val / (1024**3), 1)
-
 def start_monitoring():
     global monitoring, dashboard_thread
-    
+    clear_screen()
     if monitoring:
         user_input = input("\nMonitoring is already running. Do you want to stop it? Y/N\n")
         if user_input.lower() == "y":
             monitoring = False
+            clear_screen()
             print("\n> Monitoring stopped.\n")
             return
         else:
+            clear_screen()
             print("\n> Continuing monitoring...\n")
             return  # Do not start a new thread
 
@@ -37,8 +35,8 @@ def start_monitoring():
     monitoring = True
     dashboard_thread = threading.Thread(target=_monitoring_loop, daemon=True)
     dashboard_thread.start()
+    print()
     print("\n> Monitoring activated\n")
-            
 
 def _monitoring_loop():
     global current_stats, monitoring
@@ -56,19 +54,8 @@ def _monitoring_loop():
         current_stats["disk_total"] = to_gb(disk.total)
         current_stats["disk_percent"] = disk.percent
 
-def stop_monitoring():
-    global monitoring
-    if monitoring:
-        monitoring = False
-        print("Monitoring stopped.\n")
-    else:
-        print("Monitoring was not running.\n")
-
 def get_current_stats():
     return current_stats.copy()
-
-def clear_screen():
-    os.system('cls' if os.name == 'nt' else 'clear')
 
 def show_current_stats():  #Show stats and return to menu on Enter without stopping background monitoring
     stop_display = False
@@ -103,41 +90,43 @@ def list_active_monitoring():
         print("\n> No monotoring activated ")
 
 def start_monitoring_mode():
-    print("Monitoring mode started. Press Enter to return to menu.")
-    stop_display = False
+    if monitoring:
+        print("Monitoring mode started. Press Enter to return to menu.")
+        stop_display = False
 
-    def wait_for_enter():
-        nonlocal stop_display
-        input()  # just wait for Enter
-        stop_display = True
+        def wait_for_enter():
+            nonlocal stop_display
+            input()  # just wait for Enter
+            stop_display = True
 
-    input_thread = threading.Thread(target=wait_for_enter, daemon=True)
-    input_thread.start()
+        input_thread = threading.Thread(target=wait_for_enter, daemon=True)
+        input_thread.start()
 
-    while not stop_display:
-        stats = get_current_stats()  # get latest stats
+        while not stop_display:
+            stats = get_current_stats() 
+            clear_screen()
+            print("\n== Active Monitoring ==\n")
+            print(f"CPU: {stats['cpu']}%")
+            print(f"Memory: {stats['memory_used']} GB / {stats['memory_total']} GB ({stats['memory_percent']}%)")
+            print(f"Disk: {stats['disk_used']} GB / {stats['disk_total']} GB ({stats['disk_percent']}%)\n")
+
+            for alarm in alarm_manager.get_alarms():
+                area = alarm["area"]
+                threshold = alarm["threshold"]
+
+                if area == "CPU" and stats["cpu"] >= threshold:
+                    print(f"⚠️  CPU alarm triggered! Usage: {stats['cpu']}% (threshold {threshold}%)  ⚠️")
+
+                elif area == "RAM" and stats["memory_percent"] >= threshold:
+                    print(f"⚠️  RAM alarm triggered! Usage: {stats['memory_percent']}% (threshold {threshold}%)  ⚠️")
+
+                elif area == "Memory" and stats["disk_percent"] >= threshold:
+                    print(f"⚠️  Disk alarm triggered! Usage: {stats['disk_percent']}% (threshold {threshold}%)  ⚠️")
+
+            print("\n(Press Enter to return)\n")
+            time.sleep(1)
+
         clear_screen()
-        print("\n== Active Monitoring ==\n")
-        print(f"CPU: {stats['cpu']}%")
-        print(f"Memory: {stats['memory_used']} GB / {stats['memory_total']} GB ({stats['memory_percent']}%)")
-        print(f"Disk: {stats['disk_used']} GB / {stats['disk_total']} GB ({stats['disk_percent']}%)\n")
-
-        # Check alarms
-        for alarm in alarm_manager.get_alarms():
-            area = alarm["area"]
-            threshold = alarm["threshold"]
-
-            if area == "CPU" and stats["cpu"] >= threshold:
-                print(f"⚠️  CPU alarm triggered! Usage: {stats['cpu']}% (threshold {threshold}%)  ⚠️")
-
-            elif area == "RAM" and stats["memory_percent"] >= threshold:
-                print(f"⚠️  RAM alarm triggered! Usage: {stats['memory_percent']}% (threshold {threshold}%)  ⚠️")
-
-            elif area == "Memory" and stats["disk_percent"] >= threshold:
-                print(f"⚠️  Disk alarm triggered! Usage: {stats['disk_percent']}% (threshold {threshold}%)  ⚠️")
-
-        print("\n(Press Enter to return)\n")
-        time.sleep(1)
-
-    clear_screen()
-    print("Returning to menu...\n")
+        print("Returning to menu...\n")
+    else:
+        print("Monitoring not active.")

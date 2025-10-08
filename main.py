@@ -11,8 +11,13 @@ def build_main_menu():
         print("4. Show Alarms")
         print("5. Start Monitoring Mode")
         print("0. Exit")
+        
+        try:
+            choice = input("Choose an option: ").strip()
+        except KeyboardInterrupt: # Handle Ctrl+C cleanly & Exit the menu loop
+            print("\n\nExiting program...")
+            break 
 
-        choice = input("Choose an option: ")
         if choice == "1":
             start_monitoring()
 
@@ -24,6 +29,7 @@ def build_main_menu():
 
         elif choice == "4":
             alarms = alarm_manager.get_alarms()
+            clear_screen()
             if alarms:
                 print("\n--- Active Alarms ---")
                 for i, alarm in enumerate(alarms, start=1):
