@@ -1,8 +1,9 @@
 from monitor import *
-from logger import *
 from alarms import *
 
+
 def build_main_menu():
+    write_log("Program started")
     while True:
         print("\n=== System Monitoring ===")
         print("1. Start/Stop Monitoring")
@@ -36,6 +37,7 @@ def build_main_menu():
             
         elif choice == "0":
             print("Exiting...")
+            write_log("Exit program")
             break
         
         else:

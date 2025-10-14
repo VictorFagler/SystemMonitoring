@@ -17,6 +17,7 @@ current_stats = {
 }
 
 def start_monitoring():
+
     global monitoring, dashboard_thread
     clear_screen()
     if monitoring:
@@ -35,6 +36,7 @@ def start_monitoring():
     monitoring = True
     dashboard_thread = threading.Thread(target=monitoring_loop, daemon=True)
     dashboard_thread.start()
+    write_log("Monitoring started.")
     print()
     print("\n> Monitoring activated\n")
 
@@ -91,6 +93,7 @@ def list_active_monitoring():
 
 def start_monitoring_mode():
     if monitoring:
+        write_log(f"Monitoring Mode Activated")
         print("Monitoring mode started. Press Enter to return to menu.")
         stop_display = False
 
@@ -116,12 +119,15 @@ def start_monitoring_mode():
 
                 if area == "CPU" and stats["cpu"] >= threshold:
                     print(f"⚠️  CPU alarm triggered! Usage: {stats['cpu']}% (threshold {threshold}%)  ⚠️")
+                    write_log(f"CPU alarm triggered: {stats['cpu']}% >= {threshold}%")
 
                 elif area == "Memory" and stats["memory_percent"] >= threshold:
                     print(f"⚠️  Memory alarm triggered! Usage: {stats['memory_percent']}% (threshold {threshold}%)  ⚠️")
+                    write_log(f"Memory alarm triggered: {stats['memory']}% >= {threshold}%")
 
                 elif area == "Disk" and stats["disk_percent"] >= threshold:
                     print(f"⚠️  Disk alarm triggered! Usage: {stats['disk_percent']}% (threshold {threshold}%)  ⚠️")
+                    write_log(f"Disk alarm triggered: {stats['disk']}% >= {threshold}%")
 
             print("\n(Press Enter to return)\n")
             time.sleep(1)

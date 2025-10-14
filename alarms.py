@@ -14,12 +14,14 @@ class AlarmManager:
         self.alarms.append(alarm)
         self.alarms.sort(key=lambda a: a["area"])  # keep sorted all the time
         self.save_alarms()
+        write_log(f"Alarm created: [{area}] ({threshold}%)")
         return alarm
     
     def delete_alarm(self, index):
         if 0 <= index <= len(self.alarms):
             removed_alarm = self.alarms.pop(index)
             self.save_alarms()
+            write_log(f"Alarm deleted: [{removed_alarm['area']}] ({removed_alarm['threshold']}%)")
             return removed_alarm
         else:
             return None

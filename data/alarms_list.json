@@ -1,6 +1,6 @@
 [
     {
-        "area": "CPU",
-        "threshold": 5
+        "area": "Memory",
+        "threshold": 15
     }
 ]
