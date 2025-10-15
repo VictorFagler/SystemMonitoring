@@ -1,6 +1,18 @@
 [
     {
+        "area": "CPU",
+        "threshold": 5
+    },
+    {
+        "area": "CPU",
+        "threshold": 5
+    },
+    {
+        "area": "CPU",
+        "threshold": 10
+    },
+    {
         "area": "Memory",
-        "threshold": 15
+        "threshold": 5
     }
 ]
