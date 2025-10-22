@@ -1,18 +1,19 @@
 from utils import *
 import json
 
-ALARM_FILE = os.path.join("data", "alarms_list.json")  # File to store alarms
+ALARM_FILE = os.path.join("data", "alarms_list.json") 
 
 class AlarmManager:
     def __init__(self, file_path=ALARM_FILE):
         self.file_path = file_path
-        self.alarms = []
-        self.load_alarms()  # Load alarms from file at startup
+        self.alarms = {"CPU": [], "Memory": [], "Disk": []}
+        self.last_removed = None
+        self.load_alarms() 
 
     def create_alarm(self, area, threshold):
-        alarm = {"area": area, "threshold": int(threshold)}
-        self.alarms.append(alarm)
-        self.alarms.sort(key=lambda a: a["area"])  # keep sorted all the time
+        alarm = {"threshold": int(threshold)}
+        self.alarms[area].append(alarm)
+        self.alarms[area].sort(key=lambda a: a["threshold"]) 
         self.save_alarms()
         write_log(f"Alarm created: [{area}] ({threshold}%)")
         return alarm
@@ -20,64 +21,72 @@ class AlarmManager:
     def get_alarms(self):
         return self.alarms
     
-    def delete_alarm(self, index):
-        if 0 <= index < len(self.alarms):
-            removed_alarm = self.alarms.pop(index)
-            self.save_alarms()
-            write_log(f"Alarm deleted: [{removed_alarm['area']}] ({removed_alarm['threshold']}%)")
-            return removed_alarm
-        else:
-            return None
+    def delete_alarm(self, area, index):
+        removed = self.alarms[area].pop(index)
+        self.save_alarms()
+        write_log(f"Alarm deleted: [{area}] ({removed['threshold']}%)")
+
+        self.last_removed = {"area": area, "threshold": removed["threshold"]} # Store area with the removed alarm
+
+        return removed
         
     def show_and_delete_alarms(self):
         while True:
             clear_screen()
             alarms = self.get_alarms()
-            self._print_alarm_list(alarms)
 
-            if not alarms:
-                safe_input("\nPress Enter to return to menu...")
-                clear_screen()
-                return
+            flat_alarm_list = []
+            for area, alarms_in_area in alarms.items():  # clearer names
+                for alarm in alarms_in_area:
+                    flat_alarm_list.append((area, alarm))
 
-            input_choice = safe_input("Your choice (Enter to exit): ").strip()
+            self.print_alarm_list(flat_alarm_list)
+
+            input_choice = safe_input("Your choice: ").strip()
             if input_choice == "":
                 clear_screen()
                 return
 
-            self._handle_alarm_choice(input_choice)
+            self.handle_alarm_choice(input_choice, flat_alarm_list)
 
-    def _print_alarm_list(self, alarms):
+    def print_alarm_list(self, flat_alarm_list):
         print("\n=== Active Alarms ===\n")
 
-        # Show the most recently deleted alarm (once)
-        if getattr(self, "_last_removed", None):
-            last_removed = self._last_removed
+        if self.last_removed:
+            last_removed = self.last_removed
             print(f"❌ Deleted alarm: [{last_removed['area']}] ({last_removed['threshold']}%)\n")
-            self._last_removed = None
+            self.last_removed = None
 
-        if not alarms:
+        if not flat_alarm_list:
             print("No active alarms.")
             return
 
-        for i, alarm in enumerate(alarms, start=1):
-            print(f"{i}. [{alarm['area']}] ({alarm['threshold']}%)")
+        for i, (area, alarm) in enumerate(flat_alarm_list, start=1):
+            print(f"{i}. [{area}] {alarm['threshold']}%")
+
         print("\nPress Enter to return or type a number to delete an alarm.\n")
 
-    def _handle_alarm_choice(self, input_choice):
+    def handle_alarm_choice(self, input_choice, flat_alarm_list):
         try:
             index = int(input_choice) - 1
-            removed = self.delete_alarm(index)
-            if removed:
-                self._last_removed = removed
-            else:
+
+            if not (0 <= index < len(flat_alarm_list)):
                 print("\n❌ Invalid number.")
                 safe_input("\nPress Enter to continue...")
+                return
+
+            area, alarm_to_remove = flat_alarm_list[index]
+
+            self.alarms[area].remove(alarm_to_remove)
+            self.save_alarms()
+            write_log(f"Alarm deleted: [{area}] ({alarm_to_remove['threshold']}%)")
+            self.last_removed = {"area": area, "threshold": alarm_to_remove["threshold"]}
+
         except ValueError:
             print("\n❌ Please enter a valid number.")
             safe_input("\nPress Enter to continue...")
- 
- #   === File Handling ===
+    
+ #   === Alarm File Handling ===
 
     def save_alarms(self):
         try:
@@ -88,15 +97,14 @@ class AlarmManager:
             print(f"❌ Error saving alarms: {e}")
             write_log(f"Error saving alarms: {e}")
 
-    def load_alarms(self):  #Load alarms from JSON file if it exists. 
+    def load_alarms(self):
         if os.path.exists(self.file_path):
             try:
                 with open(self.file_path, "r") as f:
                     self.alarms = json.load(f)
-
             except (json.JSONDecodeError, OSError) as e:
                 print(f"⚠️  Warning: Could not load alarms ({e}). Starting fresh.")
-                self.alarms = []
+                self.alarms = {"CPU": [], "Memory": [], "Disk": []}
                 write_log(f"Alarm file load error: {e}")
 
 alarm_manager = AlarmManager() # Create a shared global instance

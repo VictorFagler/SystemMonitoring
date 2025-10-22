@@ -18,6 +18,7 @@ def bytes_to_gb(val): #Convert bytes to gigabytes
 def safe_input(prompt=""):
     try:
         return input(prompt)
+    
     except KeyboardInterrupt:
         print("\nAborted by user.")
         write_log("Aborted by user")

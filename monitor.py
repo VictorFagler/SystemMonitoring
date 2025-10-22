@@ -17,11 +17,11 @@ current_stats = {
     "disk_percent": 0
 }
 
-
 # === Core monitoring functions ===
 def start_monitoring():
     global monitoring, dashboard_thread
     clear_screen()
+
     if monitoring:
         user_input = safe_input("\nMonitoring is already running. Do you want to stop it? Y/N\n")
         if user_input.lower() == "y":
@@ -32,12 +32,11 @@ def start_monitoring():
         else:
             clear_screen()
             print("\n> Continuing monitoring...\n")
-            return  # Do not start a new thread
+            return 
 
     # Start monitoring if not already running
     monitoring = True
-    dashboard_thread = threading.Thread(target=monitoring_loop, daemon=True)
-    dashboard_thread.start()
+    dashboard_thread = threading.Thread(target=monitoring_loop, daemon=True).start()
     write_log("Monitoring started.")
     print()
     print("\n> Monitoring activated\n")
@@ -51,14 +50,15 @@ def monitoring_loop(): #Continuously collect system statistics while monitoring 
         mem = psutil.virtual_memory()
         disk = psutil.disk_usage(os.path.abspath(os.sep))
 
-        current_stats["cpu"] = cpu
-        current_stats["memory_used"] = bytes_to_gb(mem.used)
-        current_stats["memory_total"] = bytes_to_gb(mem.total)
-        current_stats["memory_percent"] = mem.percent
-        current_stats["disk_used"] = bytes_to_gb(disk.used)
-        current_stats["disk_total"] = bytes_to_gb(disk.total)
-        current_stats["disk_percent"] = disk.percent
-
+        current_stats.update({
+            "cpu": cpu,
+            "memory_used": bytes_to_gb(mem.used),
+            "memory_total": bytes_to_gb(mem.total),
+            "memory_percent": mem.percent,
+            "disk_used": bytes_to_gb(disk.used),
+            "disk_total": bytes_to_gb(disk.total),
+            "disk_percent": disk.percent
+        })
 
 def get_current_stats():
     return current_stats.copy()
@@ -96,22 +96,46 @@ def list_active_monitoring():
         clear_screen()
         print("\n> No monitoring active")
 
+
+last_triggered = {"CPU": None, "Memory": None, "Disk": None}
+
 def check_for_trigger_alarms(stats):
-    for alarm in alarm_manager.get_alarms():
-            area = alarm["area"]
-            threshold = alarm["threshold"]
+    alarms_dict = alarm_manager.get_alarms()
+    triggered_to_show = []  # display in terminal
 
-            if area == "CPU" and stats["cpu"] >= threshold:
-                print(f"⚠️  CPU alarm triggered! Usage: {stats['cpu']}% (threshold {threshold}%)  ⚠️")
-                write_log(f"CPU alarm triggered: {stats['cpu']}% >= {threshold}%")
+    for area, alarms in alarms_dict.items():
+        if not alarms:
+            continue
 
-            elif area == "Memory" and stats["memory_percent"] >= threshold:
-                print(f"⚠️  Memory alarm triggered! Usage: {stats['memory_percent']}% (threshold {threshold}%)  ⚠️")
-                write_log(f"Memory alarm triggered: {stats['memory_percent']}% >= {threshold}%")
+        current_value = {
+            "CPU": stats["cpu"],
+            "Memory": stats["memory_percent"],
+            "Disk": stats["disk_percent"]
+        }[area]
 
-            elif area == "Disk" and stats["disk_percent"] >= threshold:
-                print(f"⚠️  Disk alarm triggered! Usage: {stats['disk_percent']}% (threshold {threshold}%)  ⚠️")
-                write_log(f"Disk alarm triggered: {stats['disk_percent']}% >= {threshold}%")
+        # Find highest threshold <= current usage
+        thresholds = sorted([alarm["threshold"] for alarm in alarms])
+        highest_trigger = None
+        for t in thresholds:
+            if current_value >= t:
+                highest_trigger = t
+            else:
+                break
+
+        if highest_trigger is not None:
+            triggered_to_show.append((area, current_value, highest_trigger))
+
+            # Only log when crossing threshold
+            if last_triggered[area] != highest_trigger:
+                write_log(f"{area} alarm ({highest_trigger} %) triggered: {current_value} %")
+                last_triggered[area] = highest_trigger
+
+        else:
+            last_triggered[area] = None
+
+    # Display all triggered alarms in terminal
+    for area, value, threshold in triggered_to_show:
+        print(f"⚠️ {area} alarm triggered! Usage: {value}% (threshold {threshold}%) ⚠️")
 
 def start_monitoring_mode():
     if monitoring:
@@ -131,7 +155,6 @@ def start_monitoring_mode():
             clear_screen()
             print_stats(stats)
 
-            # --- Check alarms ---
             check_for_trigger_alarms(stats)
 
             print("\n(Press Enter to return)\n")

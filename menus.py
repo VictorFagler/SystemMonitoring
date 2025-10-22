@@ -76,4 +76,4 @@ def build_alarm_menu():
     # Create and save the alarm
     alarm = alarm_manager.create_alarm(area, threshold)
     clear_screen()
-    print(f"\n✅ Alarm created: [{alarm['area']}] ({alarm['threshold']}%)")
+    print(f"\n✅ Alarm created: [{area}] ({alarm['threshold']}%)")
