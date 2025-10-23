@@ -124,11 +124,13 @@ def check_for_trigger_alarms(stats):
 
         if highest_trigger is not None:
             triggered_to_show.append((area, current_value, highest_trigger))
+            
 
             # Only log when crossing threshold
             if last_triggered[area] != highest_trigger:
                 write_log(f"{area} alarm ({highest_trigger} %) triggered: {current_value} %")
                 last_triggered[area] = highest_trigger
+                threading.Thread(target=play_alarm_sound, daemon=True).start()
 
         else:
             last_triggered[area] = None
@@ -136,6 +138,7 @@ def check_for_trigger_alarms(stats):
     # Display all triggered alarms in terminal
     for area, value, threshold in triggered_to_show:
         print(f"⚠️ {area} alarm triggered! Usage: {value}% (threshold {threshold}%) ⚠️")
+        
 
 def start_monitoring_mode():
     if monitoring:

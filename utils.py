@@ -1,4 +1,6 @@
 import os
+import winsound
+import threading
 from datetime import datetime
 
 LOG_FILE = os.path.join("logs", "system.log")
@@ -23,3 +25,8 @@ def safe_input(prompt=""):
         print("\nAborted by user.")
         write_log("Aborted by user")
         return ""
+    
+def play_alarm_sound():
+    duration = 600  # milliseconds
+    freq = 600     # Hz
+    winsound.Beep(freq, duration)
