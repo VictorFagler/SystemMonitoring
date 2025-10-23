@@ -4,7 +4,6 @@ import threading
 from utils import *
 from alarms import *
 
-# === Global state ===
 monitoring = False
 dashboard_thread = None
 current_stats = {
@@ -17,7 +16,6 @@ current_stats = {
     "disk_percent": 0
 }
 
-# === Core monitoring functions ===
 def start_monitoring():
     global monitoring, dashboard_thread
     clear_screen()
@@ -34,7 +32,6 @@ def start_monitoring():
             print("\n> Continuing monitoring...\n")
             return 
 
-    # Start monitoring if not already running
     monitoring = True
     dashboard_thread = threading.Thread(target=monitoring_loop, daemon=True).start()
     write_log("Monitoring started.")
@@ -43,7 +40,7 @@ def start_monitoring():
 
 def monitoring_loop(): #Continuously collect system statistics while monitoring is active.
     global current_stats, monitoring
-    psutil.cpu_percent(interval=None)    # Prime CPU measurement
+    psutil.cpu_percent(interval=None) 
 
     while monitoring:
         cpu = psutil.cpu_percent(interval=1)
@@ -69,7 +66,7 @@ def print_stats(stats):
     print(f"Memory: {stats['memory_used']} GB / {stats['memory_total']} GB ({stats['memory_percent']}%)")
     print(f"Disk: {stats['disk_used']} GB / {stats['disk_total']} GB ({stats['disk_percent']}%)\n")
 
-def show_current_stats():  #Show stats and return to menu on Enter without stopping background monitoring
+def show_current_stats():  #Show stats without stopping background monitoring
     stop_display = False
 
     def enterkey_to_break():
@@ -95,7 +92,6 @@ def list_active_monitoring():
     else:
         clear_screen()
         print("\n> No monitoring active")
-
 
 last_triggered = {"CPU": None, "Memory": None, "Disk": None}
 
@@ -125,7 +121,6 @@ def check_for_trigger_alarms(stats):
         if highest_trigger is not None:
             triggered_to_show.append((area, current_value, highest_trigger))
             
-
             # Only log when crossing threshold
             if last_triggered[area] != highest_trigger:
                 write_log(f"{area} alarm ({highest_trigger} %) triggered: {current_value} %")
@@ -135,11 +130,9 @@ def check_for_trigger_alarms(stats):
         else:
             last_triggered[area] = None
 
-    # Display all triggered alarms in terminal
     for area, value, threshold in triggered_to_show:
         print(f"⚠️ {area} alarm triggered! Usage: {value}% (threshold {threshold}%) ⚠️")
         
-
 def start_monitoring_mode():
     if monitoring:
         write_log(f"Monitoring Mode Activated")
@@ -148,7 +141,7 @@ def start_monitoring_mode():
 
         def enterkey_to_break():
             nonlocal stop_display
-            safe_input()  # just wait for Enter
+            safe_input()
             stop_display = True
 
         threading.Thread(target=enterkey_to_break, daemon=True).start()

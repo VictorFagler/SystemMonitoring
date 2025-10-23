@@ -26,7 +26,7 @@ class AlarmManager:
         self.save_alarms()
         write_log(f"Alarm deleted: [{area}] ({removed['threshold']}%)")
 
-        self.last_removed = {"area": area, "threshold": removed["threshold"]} # Store area with the removed alarm
+        self.last_removed = {"area": area, "threshold": removed["threshold"]} 
 
         return removed
         
@@ -36,7 +36,7 @@ class AlarmManager:
             alarms = self.get_alarms()
 
             flat_alarm_list = []
-            for area, alarms_in_area in alarms.items():  # clearer names
+            for area, alarms_in_area in alarms.items(): 
                 for alarm in alarms_in_area:
                     flat_alarm_list.append((area, alarm))
 
@@ -87,7 +87,6 @@ class AlarmManager:
             safe_input("\nPress Enter to continue...")
     
  #   === Alarm File Handling ===
-
     def save_alarms(self):
         try:
             with open(self.file_path, "w", encoding="utf-8") as f:
