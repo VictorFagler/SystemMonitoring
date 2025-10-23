@@ -27,5 +27,5 @@ def safe_input(prompt=""):
     
 def play_alarm_sound():
     duration = 600 
-    freq = 600 
+    freq = 650 
     winsound.Beep(freq, duration)

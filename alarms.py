@@ -79,8 +79,8 @@ class AlarmManager:
 
             self.alarms[area].remove(alarm_to_remove)
             self.save_alarms()
-            write_log(f"Alarm deleted: [{area}] ({alarm_to_remove['threshold']}%)")
             self.last_removed = {"area": area, "threshold": alarm_to_remove["threshold"]}
+            write_log(f"Alarm deleted: [{area}] ({alarm_to_remove['threshold']}%)")
 
         except ValueError:
             print("\n❌ Please enter a valid number.")

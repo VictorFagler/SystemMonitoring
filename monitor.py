@@ -150,9 +150,7 @@ def start_monitoring_mode():
             stats = get_current_stats()
             clear_screen()
             print_stats(stats)
-
             check_for_trigger_alarms(stats)
-
             print("\n(Press Enter to return)\n")
             time.sleep(1)
 
